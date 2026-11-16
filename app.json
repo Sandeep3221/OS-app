@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "MLQ Scheduler",
+    "slug": "mlq-scheduler",
+    "version": "1.0.0",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#080F1D",
+    "android": {
+      "package": "com.osproject.mlqscheduler",
+      "softwareKeyboardLayoutMode": "resize"
+    },
+    "plugins": [
+      "expo-status-bar"
+    ]
+  }
+}
