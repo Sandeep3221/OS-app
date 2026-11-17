@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { Icon } from './src/components/UI';
+import { Icon, MotionProvider } from './src/components/UI';
 import HomeScreen from './src/screens/HomeScreen';
 import ProcessScreen from './src/screens/ProcessScreen';
 import SimulationScreen from './src/screens/SimulationScreen';
@@ -78,20 +78,7 @@ function Workspace() {
   };
   return (
     <SafeAreaView style={styles.app}>
-      <StatusBar style="light" />
-      <View style={styles.topbar}>
-        <View style={styles.brand}>
-          <Icon name="cpu" size={20} color={colors.cyan} />
-          <Text style={styles.brandText}>
-            MLQ{' '}
-            <Text style={{ color: colors.muted, fontWeight: '400' }}>
-              {' '}
-              / SCHEDULING LAB
-            </Text>
-          </Text>
-        </View>
-        <View style={styles.localDot} />
-      </View>
+      <StatusBar style="dark" />
       <View style={{ flex: 1 }}>
         {active === 'home' && (
           <HomeScreen
@@ -127,15 +114,14 @@ function Workspace() {
                 onPress={() => navigate(id)}
                 style={({ pressed }) => [
                   styles.tab,
-                  selected && styles.activeTab,
                   pressed && { opacity: 0.6 },
                 ]}
               >
-                <Icon name={id} color={selected ? colors.cyan : colors.muted} />
+                <Icon name={id} color={selected ? colors.accent : colors.muted} />
                 <Text
                   style={[
                     styles.tabLabel,
-                    { color: selected ? colors.cyan : colors.muted },
+                    { color: selected ? colors.accent : colors.muted, fontWeight: selected ? '700' : '400' },
                   ]}
                 >
                   {title}
@@ -152,44 +138,23 @@ function Workspace() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <Workspace />
+      <MotionProvider>
+        <Workspace />
+      </MotionProvider>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
   app: { flex: 1, backgroundColor: colors.background },
-  topbar: {
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 },
-  brandText: {
-    fontSize: 11,
-    color: colors.text,
-    letterSpacing: 1.2,
-    fontWeight: '700',
-    flexShrink: 1,
-  },
-  localDot: {
-    width: 6,
-    height: 6,
-    backgroundColor: colors.green,
-    borderRadius: 3,
-  },
   navigation: {
     flexDirection: 'row',
     alignItems: 'stretch',
-    borderTopWidth: 1,
+    borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,
     backgroundColor: colors.surface,
     paddingHorizontal: 6,
-    paddingTop: 8,
+    paddingTop: 4,
     paddingBottom: 6,
     gap: 3,
   },
@@ -198,10 +163,9 @@ const styles = StyleSheet.create({
     minHeight: 60,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 7,
+    gap: 5,
     paddingVertical: 8,
-    borderRadius: 12,
+    borderRadius: 0,
   },
-  activeTab: { backgroundColor: colors.foregroundTint },
-  tabLabel: { fontSize: 12, fontWeight: '600', textAlign: 'center' },
+  tabLabel: { fontSize: 12, textAlign: 'center', maxWidth: '100%' },
 });

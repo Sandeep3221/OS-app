@@ -12,13 +12,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ProcessCard from '../components/ProcessCard';
-import { Badge, Button, Choice, Field, Header, Page } from '../components/UI';
+import { Button, Choice, Disclosure, Field, Header, Page, useReducedMotion } from '../components/UI';
 import { LIMITS, validateInput } from '../utils/scheduler';
 import { integerError } from '../utils/session';
 import { colors, shared } from '../utils/theme';
 
 export default function ProcessScreen({ session, dispatch, runSimulation }) {
   const { processes, quantum, nextId } = session;
+  const reducedMotion = useReducedMotion();
   const [draft, setDraft] = useState(null);
   const [errors, setErrors] = useState({});
   const foregroundCount = processes.filter(
@@ -96,48 +97,22 @@ export default function ProcessScreen({ session, dispatch, runSimulation }) {
     >
       <Page>
         <Header
-          eyebrow="01 / BUILD YOUR WORKLOAD"
           title="Processes"
-          subtitle="Choose when work arrives and which queue it belongs to."
+          subtitle="Build your workload."
         />
-        <View style={shared.wrap}>
-          <Badge label={`${processes.length} total`} color={colors.text} />
-          <Badge label={`${foregroundCount} foreground`} />
-          <Badge
-            label={`${processes.length - foregroundCount} background`}
-            color={colors.purple}
-          />
-        </View>
-        <View style={shared.card}>
-          <View style={shared.row}>
-            <Text style={[shared.heading, { flex: 1 }]}>
-              Round Robin settings
-            </Text>
-            <Badge label="FG" />
-          </View>
-          <Field
-            label="Time quantum"
-            value={quantum}
-            onChangeText={(value) => dispatch({ type: 'quantum', value })}
-            error={quantumError}
-            maxLength={4}
-            hint="CPU time per foreground turn. Default: 2 units."
-          />
-          <Text style={shared.caption}>
-            Changing any input clears previous results. Run again to apply your
-            changes.
-          </Text>
-        </View>
+        <Text style={shared.caption}>
+          {processes.length} processes · {foregroundCount} foreground · {processes.length - foregroundCount} background
+        </Text>
         <View style={shared.section}>
-          <View style={[shared.row, { justifyContent: 'space-between' }]}>
-            <Text style={shared.heading}>Your workload</Text>
+          <View style={[shared.row, { justifyContent: 'space-between', flexWrap: 'wrap' }]}>
+            <Text style={shared.heading}>Workload</Text>
             <Text style={shared.caption}>
               {totalBurst} / {LIMITS.totalBurst} burst units
             </Text>
           </View>
           <View style={shared.row}>
             <Button
-              title="+ Add Process"
+              title="Add process"
               secondary
               onPress={() => openEditor(null)}
               disabled={
@@ -147,16 +122,12 @@ export default function ProcessScreen({ session, dispatch, runSimulation }) {
               style={{ flex: 1 }}
             />
             <Button
-              title="Load Sample"
+              title="Load sample"
               secondary
               onPress={loadSample}
               style={{ flex: 1 }}
             />
           </View>
-          <Text style={shared.caption}>
-            Up to {LIMITS.processes} processes · Arrival 0–{LIMITS.arrival} ·
-            Combined burst ≤ {LIMITS.totalBurst}
-          </Text>
           {!processes.length && (
             <View style={shared.card}>
               <Text style={shared.heading}>Your CPU is ready.</Text>
@@ -166,39 +137,43 @@ export default function ProcessScreen({ session, dispatch, runSimulation }) {
               </Text>
             </View>
           )}
-          {processes.map((p) => (
-            <ProcessCard
-              key={p.id}
-              process={p}
-              onEdit={() => openEditor(p)}
-              onDelete={() =>
-                Alert.alert(
-                  `Delete ${p.id}?`,
-                  'The current simulation results will be cleared.',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                      text: 'Delete',
-                      style: 'destructive',
-                      onPress: () => dispatch({ type: 'delete', id: p.id }),
-                    },
-                  ],
-                )
-              }
-            />
-          ))}
+          <View style={shared.group}>
+            {processes.map((p) => (
+              <ProcessCard
+                key={p.id}
+                process={p}
+                onEdit={() => openEditor(p)}
+                onDelete={() =>
+                  Alert.alert(
+                    `Delete ${p.id}?`,
+                    'The current simulation results will be cleared.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Delete',
+                        style: 'destructive',
+                        onPress: () => dispatch({ type: 'delete', id: p.id }),
+                      },
+                    ],
+                  )
+                }
+              />
+            ))}
+          </View>
         </View>
-        <Button
-          title="Run Simulation →"
-          disabled={!processes.length || !!quantumError}
-          onPress={() => {
-            Keyboard.dismiss();
-            runSimulation();
-          }}
-        />
+        <View style={shared.card}>
+          <Field
+            label="Time quantum"
+            value={quantum}
+            onChangeText={(value) => dispatch({ type: 'quantum', value })}
+            error={quantumError}
+            maxLength={4}
+            hint="CPU time per foreground turn · Default 2 units"
+          />
+        </View>
         {!!processes.length && (
           <Button
-            title="Clear All Processes"
+            title="Clear all processes"
             secondary
             danger
             onPress={() =>
@@ -217,11 +192,25 @@ export default function ProcessScreen({ session, dispatch, runSimulation }) {
             }
           />
         )}
+        <Disclosure title="Input limits & settings">
+          <Text style={shared.body}>Up to {LIMITS.processes} processes · Arrival 0–{LIMITS.arrival} · Combined burst ≤ {LIMITS.totalBurst} units.</Text>
+          <Text style={shared.body}>Changing any input clears previous results. Run again to apply your changes.</Text>
+        </Disclosure>
       </Page>
+      <View style={styles.footer}>
+        <Button
+          title="Run simulation"
+          disabled={!processes.length || !!quantumError}
+          onPress={() => {
+            Keyboard.dismiss();
+            runSimulation();
+          }}
+        />
+      </View>
       <Modal
         visible={!!draft}
         transparent
-        animationType="none"
+        animationType={reducedMotion ? 'none' : 'slide'}
         onRequestClose={() => setDraft(null)}
         statusBarTranslucent
       >
@@ -231,41 +220,47 @@ export default function ProcessScreen({ session, dispatch, runSimulation }) {
               width: '100%',
               maxWidth: 600,
               flex: 1,
-              justifyContent: 'center',
+              justifyContent: 'flex-end',
             }}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           >
             <ScrollView
               contentContainerStyle={{
                 flexGrow: 1,
-                justifyContent: 'center',
+                justifyContent: 'flex-end',
                 paddingVertical: 16,
               }}
               keyboardShouldPersistTaps="handled"
             >
               {draft && (
                 <View accessibilityViewIsModal style={styles.editor}>
-                  <Header
-                    eyebrow={draft.editing ? 'EDIT PROCESS' : 'NEW PROCESS'}
-                    title={draft.id}
-                    subtitle="IDs are assigned automatically and stay fixed when you edit."
-                  />
-                  <Field
-                    label="Arrival time"
-                    value={draft.arrival}
-                    onChangeText={(arrival) => setDraft({ ...draft, arrival })}
-                    error={errors.arrival}
-                    maxLength={5}
-                    hint="When this process enters its ready queue."
-                  />
-                  <Field
-                    label="Burst time"
-                    value={draft.burst}
-                    onChangeText={(burst) => setDraft({ ...draft, burst })}
-                    error={errors.burst}
-                    maxLength={4}
-                    hint="Total CPU time this process needs."
-                  />
+                  <View style={[shared.row, { alignItems: 'flex-start' }]}>
+                    <View style={{ flex: 1, gap: 4 }}>
+                      <Text accessibilityRole="header" style={shared.heading}>{draft.editing ? 'Edit process' : 'New process'}</Text>
+                      <Text style={shared.caption}>{draft.id} · Fixed process ID</Text>
+                    </View>
+                    <Button title="Cancel" secondary style={{ backgroundColor: 'transparent', paddingHorizontal: 8, minHeight: 48 }} onPress={() => setDraft(null)} />
+                  </View>
+                  <View style={[shared.row, { alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }]}>
+                    <Field
+                      style={{ flex: 1, minWidth: 120 }}
+                      label="Arrival time"
+                      value={draft.arrival}
+                      onChangeText={(arrival) => setDraft({ ...draft, arrival })}
+                      error={errors.arrival}
+                      maxLength={5}
+                      hint="Enters the ready queue, in time units"
+                    />
+                    <Field
+                      style={{ flex: 1, minWidth: 120 }}
+                      label="Burst time"
+                      value={draft.burst}
+                      onChangeText={(burst) => setDraft({ ...draft, burst })}
+                      error={errors.burst}
+                      maxLength={4}
+                      hint="Required CPU time, in time units"
+                    />
+                  </View>
                   <Text style={shared.label}>Assigned queue</Text>
                   <Choice
                     label="Foreground · Round Robin"
@@ -274,7 +269,7 @@ export default function ProcessScreen({ session, dispatch, runSimulation }) {
                   />
                   <Choice
                     label="Background · FCFS"
-                    color={colors.purple}
+                    color={colors.backgroundQueue}
                     selected={draft.queue === 'background'}
                     onPress={() => setDraft({ ...draft, queue: 'background' })}
                   />
@@ -287,13 +282,8 @@ export default function ProcessScreen({ session, dispatch, runSimulation }) {
                     </Text>
                   )}
                   <Button
-                    title={draft.editing ? 'Save Changes' : 'Add Process'}
+                    title={draft.editing ? 'Save changes' : 'Add process'}
                     onPress={save}
-                  />
-                  <Button
-                    title="Cancel"
-                    secondary
-                    onPress={() => setDraft(null)}
                   />
                 </View>
               )}
@@ -305,18 +295,25 @@ export default function ProcessScreen({ session, dispatch, runSimulation }) {
   );
 }
 const styles = StyleSheet.create({
+  footer: {
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 16,
+    backgroundColor: colors.background,
+  },
   overlay: {
     flex: 1,
     backgroundColor: colors.scrim,
-    paddingHorizontal: 20,
+    paddingHorizontal: 8,
     alignItems: 'center',
   },
   editor: {
     backgroundColor: colors.surface,
     borderRadius: 24,
-    padding: 22,
+    padding: 24,
     gap: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
 });

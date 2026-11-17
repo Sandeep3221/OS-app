@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Badge, Button, Header, Page } from '../components/UI';
+import { Button, Disclosure, Header, Icon, Page, Reveal } from '../components/UI';
 import { colors, shared } from '../utils/theme';
 
 const topics = [
@@ -75,13 +75,10 @@ export default function LearnScreen({ navigate }) {
   return (
     <Page>
       <Header
-        eyebrow="THE CONCEPTS / VIVA READY"
         title="Learn MLQ"
-        subtitle="A practical guide to what your simulator is showing."
+        subtitle="The ideas behind every scheduling decision."
       />
-      <View style={shared.card}>
-        <Badge label="OUR EDUCATIONAL CONFIGURATION" />
-        <Text style={shared.heading}>One model, clearly defined.</Text>
+      <Disclosure title="The model used in this app">
         <Text style={shared.body}>
           Foreground uses Round Robin. Background uses FCFS. Between them,
           strict preemptive priority always favors foreground.
@@ -91,8 +88,8 @@ export default function LearnScreen({ navigate }) {
           demonstrates this particular configuration, not every possible MLQ
           policy.
         </Text>
-      </View>
-      <View style={shared.section}>
+      </Disclosure>
+      <View style={shared.group}>
         {topics.map(([title, text], index) => (
           <View key={title} style={styles.topic}>
             <Pressable
@@ -104,24 +101,18 @@ export default function LearnScreen({ navigate }) {
                 pressed && { opacity: 0.65 },
               ]}
             >
-              <Text style={[shared.caption, { color: colors.cyan, width: 24 }]}>
-                {String(index + 1).padStart(2, '0')}
-              </Text>
               <Text style={[shared.label, { flex: 1, lineHeight: 22 }]}>
                 {title}
               </Text>
-              <Text style={{ color: colors.muted, fontSize: 22 }}>
-                {expanded === index ? '−' : '+'}
-              </Text>
+              <Icon name={expanded === index ? 'down' : 'chevron'} size={20} />
             </Pressable>
             {expanded === index && (
-              <Text style={[shared.body, styles.answer]}>{text}</Text>
+              <Reveal><Text style={[shared.body, styles.answer]}>{text}</Text></Reveal>
             )}
           </View>
         ))}
       </View>
-      <View style={shared.card}>
-        <Text style={shared.heading}>Explain it in 30 seconds</Text>
+      <Disclosure title="Viva: explain it in 30 seconds">
         <Text style={shared.body}>
           “Our project visualizes one CPU serving two fixed queues. Foreground
           gets Round Robin turns and can interrupt background at any arrival.
@@ -129,28 +120,16 @@ export default function LearnScreen({ navigate }) {
           scheduler’s exact decisions and calculate waiting, turnaround, and
           response times from the same execution.”
         </Text>
-      </View>
+      </Disclosure>
       <Button
-        title="Try It with a Workload →"
+        title="Try a workload"
         onPress={() => navigate('processes')}
       />
     </Page>
   );
 }
 const styles = StyleSheet.create({
-  topic: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  topicButton: {
-    minHeight: 64,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  answer: { paddingHorizontal: 18, paddingBottom: 20 },
+  topic: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+  topicButton: { minHeight: 64, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 16 },
+  answer: { paddingHorizontal: 16, paddingBottom: 24, lineHeight: 26 },
 });

@@ -1,8 +1,10 @@
 import React, { useMemo } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { colors, processColor, shared } from '../utils/theme';
+import { FlatList, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { colors, queueColor, shared } from '../utils/theme';
+import { Disclosure } from './UI';
 
 export default function GanttChart({ timeline, time = Infinity }) {
+  const { fontScale } = useWindowDimensions();
   const data = useMemo(
     () =>
       timeline
@@ -13,13 +15,13 @@ export default function GanttChart({ timeline, time = Infinity }) {
   return (
     <View style={shared.section}>
       <View style={shared.wrap}>
-        <Text style={[shared.caption, { color: colors.cyan }]}>
+        <Text style={[shared.caption, { color: colors.foreground }]}>
           FG · Round Robin
         </Text>
-        <Text style={[shared.caption, { color: colors.purple }]}>
+        <Text style={[shared.caption, { color: colors.backgroundQueue }]}>
           BG · FCFS
         </Text>
-        <Text style={shared.caption}>IDLE · No ready work</Text>
+        <Text style={shared.caption}>Idle</Text>
       </View>
       {data.length ? (
         <FlatList
@@ -32,15 +34,15 @@ export default function GanttChart({ timeline, time = Infinity }) {
           windowSize={3}
           contentContainerStyle={{ paddingBottom: 10 }}
           renderItem={({ item }) => {
-            const color = processColor(item.processId);
+            const color = item.processId ? queueColor(item.queue) : colors.idle;
             return (
               <View
                 accessible
                 accessibilityLabel={`${item.processId || 'CPU idle'}, ${item.queue}, time ${item.start} to ${item.end}, ${item.end - item.start} units`}
                 style={{
                   width: Math.max(
-                    88,
-                    Math.min(220, (item.end - item.start) * 24),
+                    88 * fontScale,
+                    Math.min(220 * fontScale, (item.end - item.start) * 24),
                   ),
                   marginRight: 4,
                 }}
@@ -60,7 +62,7 @@ export default function GanttChart({ timeline, time = Infinity }) {
                   ]}
                 >
                   <Text style={[shared.label, { color }]}>
-                    {item.processId || 'IDLE'}
+                    {item.processId || 'Idle'}
                   </Text>
                   <Text style={shared.caption}>
                     {item.queue === 'foreground'
@@ -81,25 +83,23 @@ export default function GanttChart({ timeline, time = Infinity }) {
         />
       ) : (
         <Text style={shared.body}>
-          Execution will appear here after the first step.
+          Take a step to begin the timeline.
         </Text>
       )}
-      <Text style={shared.caption}>
-        Time in logical units · Swipe horizontally. Widths are adjusted for
-        readability; labels give exact durations. Each RR quantum stays
-        separate.
-      </Text>
+      <Disclosure title="How to read this timeline">
+        <Text style={shared.body}>Swipe across to follow execution. Labels show exact logical times and durations; block widths are adjusted for readability. Each Round Robin quantum stays separate.</Text>
+      </Disclosure>
     </View>
   );
 }
 const styles = StyleSheet.create({
   segment: {
     borderTopWidth: 3,
-    borderRadius: 8,
+    borderRadius: 4,
     padding: 12,
-    minHeight: 74,
+    minHeight: 68,
     justifyContent: 'center',
-    gap: 5,
+    gap: 4,
   },
   markers: {
     flexDirection: 'row',

@@ -1,141 +1,50 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Badge, Button, Header, Icon, Page } from '../components/UI';
+import { Button, Disclosure, Header, Icon, Page } from '../components/UI';
 import { colors, shared } from '../utils/theme';
 
 export default function HomeScreen({ navigate, processCount }) {
   return (
-    <Page>
-      <View style={[shared.row, { justifyContent: 'space-between' }]}>
-        <Badge label="OPERATING SYSTEMS LAB" />
-        <Text style={shared.caption}>PROJECT 04</Text>
-      </View>
-      <Header
-        title="MLQ Scheduler"
-        subtitle="Multilevel Queue Scheduling Simulator"
-      />
-      <View style={styles.hero}>
-        <View style={styles.cpuIcon}>
-          <Icon name="cpu" size={42} color={colors.cyan} />
-        </View>
-        <Text style={styles.heroTitle}>Two queues.{'\n'}One CPU.</Text>
-        <Text style={shared.body}>
-          See priority in action. Build a workload, follow every scheduling
-          decision, and discover what makes a process wait.
-        </Text>
-        <View style={shared.wrap}>
-          <Badge label="Interactive playback" />
-          <Badge label="Runs locally" color={colors.green} />
-        </View>
-        <Button
-          title="Start Simulation →"
-          onPress={() => navigate('processes')}
-        />
-        {processCount > 0 && (
-          <Text style={shared.caption}>
-            {processCount} processes in your current workspace
-          </Text>
-        )}
-      </View>
-      <View style={shared.section}>
-        <Text accessibilityRole="header" style={shared.heading}>
-          The scheduling path
-        </Text>
-        <View style={shared.card}>
-          <Text style={[shared.label, { textAlign: 'center' }]}>
-            Incoming processes
-          </Text>
-          <Text style={styles.arrow}>↓ assigned to one fixed queue ↓</Text>
-          <View
-            style={[
-              styles.queue,
-              {
-                borderColor: colors.cyan,
-                backgroundColor: colors.foregroundTint,
-              },
-            ]}
-          >
-            <View style={shared.wrap}>
-              <Text style={[shared.label, { color: colors.cyan }]}>
-                01 / Foreground
-              </Text>
-              <Badge label="HIGH PRIORITY" />
-            </View>
-            <Text style={shared.body}>Round Robin · shared time quantum</Text>
+    <Page contentContainerStyle={{ flexGrow: 1, gap: 32 }}>
+      <Header title="MLQ Scheduler" subtitle="See how two queues share one CPU." />
+      <View style={styles.diagram} accessible accessibilityLabel="Two fixed queues feed a single CPU. Foreground uses Round Robin with higher priority. Background uses First Come First Serve when foreground is empty.">
+        <View style={styles.lanes}>
+          <View style={styles.lane}>
+            <View style={shared.row}><View style={[styles.queueMark, { backgroundColor: colors.foreground }]} /><Text style={shared.label}>Foreground</Text></View>
+            <Text style={shared.caption}>Round Robin · Higher priority</Text>
+            <View style={styles.jobs}>{['P2', 'P3', 'P5'].map((id) => <View key={id} style={[styles.job, { backgroundColor: colors.foregroundTint }]}><Text style={[shared.label, { color: colors.foreground }]}>{id}</Text></View>)}</View>
           </View>
-          <View
-            style={[
-              styles.queue,
-              {
-                borderColor: colors.purple,
-                backgroundColor: colors.backgroundTint,
-              },
-            ]}
-          >
-            <View style={shared.wrap}>
-              <Text style={[shared.label, { color: colors.purple }]}>
-                02 / Background
-              </Text>
-              <Badge label="LOW PRIORITY" color={colors.purple} />
-            </View>
-            <Text style={shared.body}>
-              First Come First Serve · resumes after interruption
-            </Text>
-          </View>
-          <Text style={styles.arrow}>
-            ↓ strict priority selects one process ↓
-          </Text>
-          <View style={[shared.row, { justifyContent: 'center' }]}>
-            <Icon name="cpu" color={colors.cyan} />
-            <Text style={shared.label}>Single CPU execution</Text>
+          <View style={styles.lane}>
+            <View style={shared.row}><View style={[styles.queueMark, { backgroundColor: colors.backgroundQueue }]} /><Text style={shared.label}>Background</Text></View>
+            <Text style={shared.caption}>First Come First Serve</Text>
+            <View style={styles.jobs}>{['P1', 'P4'].map((id) => <View key={id} style={[styles.job, { backgroundColor: colors.backgroundTint }]}><Text style={[shared.label, { color: colors.backgroundQueue }]}>{id}</Text></View>)}</View>
           </View>
         </View>
+        <View style={styles.connector}><View style={styles.connectorLine} /><Icon name="down" size={18} /></View>
+        <View style={styles.cpu}><Icon name="cpu" color={colors.accent} size={32} /><View style={{ gap: 4 }}><Text style={shared.heading}>One CPU</Text><Text style={shared.caption}>Foreground comes first</Text></View></View>
       </View>
-      <View style={shared.card}>
-        <Text style={shared.heading}>Foreground comes first</Text>
-        <Text style={shared.body}>
-          A foreground arrival immediately interrupts background execution.
-          Background resumes only when foreground is empty. Processes never move
-          between queues.
-        </Text>
-        <Button title="Learn MLQ" secondary onPress={() => navigate('learn')} />
+      <View style={{ gap: 12 }}>
+        <Button title={processCount ? 'Continue to processes' : 'Create a simulation'} onPress={() => navigate('processes')} />
+        {processCount > 0 && <Text style={[shared.caption, { textAlign: 'center' }]}>{processCount} processes in your workspace</Text>}
       </View>
-      <Text style={shared.caption}>
-        Educational simulator · Visualizes foreground and background process
-        scheduling. It does not manage Android system processes.
-      </Text>
+      <View style={{ marginTop: 'auto' }}>
+        <Disclosure title="How this model works">
+          <Text style={shared.body}>A foreground arrival immediately interrupts background execution. Background resumes when foreground is empty. Processes stay in their assigned queue.</Text>
+          <Text style={shared.caption}>Educational simulator. Visualizes scheduling; it does not manage your device’s system processes.</Text>
+          <Button title="Learn MLQ" secondary onPress={() => navigate('learn')} />
+        </Disclosure>
+      </View>
     </Page>
   );
 }
 const styles = StyleSheet.create({
-  hero: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 24,
-    padding: 22,
-    gap: 18,
-  },
-  cpuIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 18,
-    backgroundColor: colors.foregroundTint,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroTitle: {
-    color: colors.text,
-    fontSize: 38,
-    fontWeight: '700',
-    lineHeight: 44,
-    letterSpacing: -1,
-  },
-  queue: { padding: 14, borderWidth: 1, borderRadius: 14, gap: 8 },
-  arrow: {
-    color: colors.muted,
-    fontSize: 12,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
+  diagram: { paddingVertical: 8 },
+  lanes: { gap: 24 },
+  lane: { gap: 8 },
+  queueMark: { width: 3, height: 16, borderRadius: 2 },
+  jobs: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingTop: 4 },
+  job: { minWidth: 60, minHeight: 44, borderRadius: 8, alignItems: 'center', justifyContent: 'center', padding: 8 },
+  connector: { alignItems: 'center', height: 40, justifyContent: 'center' },
+  connectorLine: { width: 1, height: 20, backgroundColor: colors.inputBorder, marginBottom: -8 },
+  cpu: { padding: 20, backgroundColor: colors.surface, borderRadius: 16, flexDirection: 'row', alignItems: 'center', gap: 20 },
 });
