@@ -6,7 +6,7 @@ import { colors, shared } from '../utils/theme';
 export default function HomeScreen({ navigate, processCount }) {
   return (
     <Page contentContainerStyle={{ flexGrow: 1, gap: 32 }}>
-      <Header title="MLQ Scheduler" subtitle="Testing CI CD pipline workflow automation." />
+      <Header title="MLQ Scheduler" subtitle="See how two queues share one CPU." />
       <View style={styles.diagram} accessible accessibilityLabel="Two fixed queues feed a single CPU. Foreground uses Round Robin with higher priority. Background uses First Come First Serve when foreground is empty.">
         <View style={styles.lanes}>
           <View style={styles.lane}>
